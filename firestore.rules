@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // 사용자 문서: 본인만 생성 가능, role은 최초 생성 시 'user'만 허용
+    // (관리자로 바꾸려면 Firebase 콘솔 Firestore에서 role 필드를 "admin"으로 직접 수정)
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId
+                    && request.resource.data.role == 'user';
+      allow update: if isAdmin();
+    }
+
+    // 도서: 로그인한 사람은 누구나 등록/조회 가능, 수정·삭제는 관리자만
+    match /books/{bookId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // 문제: 등록 즉시 공개(검수 없음). 등록은 본인 명의로만 가능.
+    // 정정(오류 신고 2명 이상 동의) 반영을 위해 로그인한 사용자는 문제를 수정할 수 있도록 허용.
+    // (소규모 내부 이용자 대상 서비스 기준의 단순화된 규칙이며, 더 엄격한 통제가 필요하면
+    //  Cloud Functions로 투표 검증 로직을 옮기는 것을 권장합니다.)
+    match /questions/{questionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorUid == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isAdmin() ||
+                    (isSignedIn() && resource.data.authorUid == request.auth.uid);
+    }
+
+    // 오류 신고(정정 요청): 누구나 등록/조회 가능, 본인 명의로만 등록,
+    // 동의 투표를 위한 update는 로그인 사용자 허용, 삭제는 관리자만
+    match /corrections/{correctionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.proposerUid == request.auth.uid;
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+  }
+}

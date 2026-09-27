@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>독서골든벨 문제은행</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <h1>📚 독서골든벨 문제은행</h1>
+  <div id="authArea" class="auth-area">
+    <button id="loginBtn" class="btn btn-primary">구글 로그인</button>
+    <div id="userBox" class="user-box hidden">
+      <img id="userPhoto" class="user-photo" src="" alt="" />
+      <span id="userName"></span>
+      <span id="adminBadge" class="badge hidden">관리자</span>
+      <button id="logoutBtn" class="btn btn-ghost">로그아웃</button>
+    </div>
+  </div>
+</header>
+
+<nav id="tabNav" class="tabnav hidden">
+  <button class="tab-btn active" data-tab="books">도서 관리</button>
+  <button class="tab-btn" data-tab="write">문제 등록</button>
+  <button class="tab-btn" data-tab="browse">문제 둘러보기</button>
+  <button class="tab-btn" data-tab="corrections">정정 내역</button>
+  <button class="tab-btn" data-tab="goldenbell">독서골든벨</button>
+  <button class="tab-btn" data-tab="ranking">랭킹</button>
+</nav>
+
+<main id="app" class="hidden">
+
+  <!-- 도서 관리 -->
+  <section id="tab-books" class="tab-panel active">
+    <h2>도서 등록</h2>
+    <form id="bookForm" class="card form-grid">
+      <input type="text" id="bookTitle" placeholder="책 제목 *" required />
+      <input type="text" id="bookAuthor" placeholder="저자 *" required />
+      <input type="text" id="bookTranslator" placeholder="역자 (선택)" />
+      <input type="text" id="bookPublisher" placeholder="출판사 *" required />
+      <button type="submit" class="btn btn-primary">도서 등록</button>
+    </form>
+
+    <h2>등록된 도서 목록</h2>
+    <input type="text" id="bookSearch" class="search-box" placeholder="책 제목/저자 검색..." />
+    <div id="bookList" class="book-list"></div>
+  </section>
+
+  <!-- 문제 등록 -->
+  <section id="tab-write" class="tab-panel">
+    <h2>문제 등록</h2>
+    <form id="questionForm" class="card form-grid">
+      <label>도서 선택 *</label>
+      <select id="qBookSelect" required></select>
+
+      <label>문제 유형 *</label>
+      <select id="qType" required>
+        <option value="mcq">객관식</option>
+        <option value="ox">O/X</option>
+        <option value="short">주관식</option>
+      </select>
+
+      <label>참고 사진 (페이지 촬영, 선택)</label>
+      <input type="file" id="qPhoto" accept="image/*" capture="environment" />
+      <button type="button" id="ocrBtn" class="btn btn-ghost small hidden">📷 사진에서 텍스트 읽어오기</button>
+      <div id="ocrStatus" class="ocr-status hidden"></div>
+      <img id="qPhotoPreview" class="photo-preview hidden" />
+
+      <label>문제 내용 *</label>
+      <textarea id="qText" rows="3" placeholder="문제를 입력하세요" required></textarea>
+
+      <div id="mcqChoicesWrap">
+        <label>객관식 보기 (2~5개)</label>
+        <div id="mcqChoices" class="mcq-choices"></div>
+        <button type="button" id="addChoiceBtn" class="btn btn-ghost small">보기 추가</button>
+      </div>
+
+      <label>정답 *</label>
+      <div id="answerWrap"></div>
+
+      <label>등록자 이름 (선택)</label>
+      <input type="text" id="qAuthorName" placeholder="이름" />
+      <label>소속 (선택)</label>
+      <input type="text" id="qAuthorAffil" placeholder="소속" />
+      <label>나이 (선택)</label>
+      <input type="number" id="qAuthorAge" placeholder="나이" min="0" max="120" />
+
+      <button type="submit" class="btn btn-primary">문제 등록</button>
+    </form>
+
+    <h2>내가 등록한 문제</h2>
+    <div id="myQuestionList" class="question-list"></div>
+  </section>
+
+  <!-- 문제 둘러보기 (전체 이용자) -->
+  <section id="tab-browse" class="tab-panel">
+    <h2>문제 둘러보기</h2>
+    <p class="hint">등록된 문제를 확인하고, 오류가 있다고 생각되면 오류 신고(수정 제안)를 남길 수 있습니다. 다른 이용자 2명 이상이 동의하면 자동으로 반영됩니다.</p>
+    <div class="filter-row">
+      <select id="browseBookFilter"><option value="">전체 도서</option></select>
+    </div>
+    <div id="browseList" class="question-list"></div>
+  </section>
+
+  <!-- 정정 내역 (관리자) -->
+  <section id="tab-corrections" class="tab-panel">
+    <h2>정정 내역</h2>
+    <p class="hint">관리자는 접수된 모든 오류 신고(수정 제안) 내역을 확인할 수 있습니다.</p>
+    <div class="filter-row">
+      <select id="correctionStatusFilter">
+        <option value="">전체</option>
+        <option value="pending">대기 중</option>
+        <option value="applied">반영됨</option>
+      </select>
+    </div>
+    <div id="correctionAdminList" class="question-list"></div>
+  </section>
+
+  <!-- 독서골든벨 -->
+  <section id="tab-goldenbell" class="tab-panel">
+    <h2>독서골든벨 출제</h2>
+    <div id="gbSetup" class="card form-grid">
+      <label>도서 선택 *</label>
+      <select id="gbBookSelect" required></select>
+      <div id="gbBookInfo" class="book-info"></div>
+      <label>문제 수</label>
+      <input type="number" id="gbCount" value="10" min="1" />
+      <label>문제 유형</label>
+      <div class="checkbox-row">
+        <label><input type="checkbox" class="gbTypeFilter" value="mcq" checked /> 객관식</label>
+        <label><input type="checkbox" class="gbTypeFilter" value="ox" checked /> O/X</label>
+        <label><input type="checkbox" class="gbTypeFilter" value="short" checked /> 주관식</label>
+      </div>
+      <button id="gbStartBtn" class="btn btn-primary">골든벨 시작</button>
+    </div>
+
+    <div id="gbQuiz" class="card hidden">
+      <div class="gb-progress"><span id="gbProgress"></span></div>
+      <div id="gbQuestionCard" class="gb-question-card"></div>
+      <div class="gb-controls">
+        <button id="gbRevealBtn" class="btn btn-ghost">정답 공개</button>
+        <button id="gbNextBtn" class="btn btn-primary">다음 문제</button>
+        <button id="gbEndBtn" class="btn btn-ghost">종료</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 랭킹 -->
+  <section id="tab-ranking" class="tab-panel">
+    <h2>문제 등록 랭킹</h2>
+    <p class="hint">등록한 문제 수에 따라 등급이 매겨집니다. (등급별 권한은 추후 설정 예정 — 현재는 표시만 됩니다)</p>
+    <div id="rankingMyTier" class="book-info"></div>
+    <div id="rankingList" class="ranking-list"></div>
+  </section>
+
+</main>
+
+<!-- 오류 신고(수정 제안) 모달 -->
+<div id="correctionModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>오류 신고 / 수정 제안</h3>
+    <div class="form-grid">
+      <label>신고 사유 *</label>
+      <textarea id="corrReason" rows="2" placeholder="무엇이 잘못되었는지 설명해 주세요"></textarea>
+      <label>수정 제안 - 문제 내용 (변경 시에만 입력)</label>
+      <textarea id="corrQuestionText" rows="2" placeholder="원문을 유지하려면 비워두세요"></textarea>
+      <label>수정 제안 - 정답 (변경 시에만 입력)</label>
+      <input type="text" id="corrAnswer" placeholder="원문을 유지하려면 비워두세요" />
+      <div class="modal-actions">
+        <button id="corrCancelBtn" class="btn btn-ghost">취소</button>
+        <button id="corrSubmitBtn" class="btn btn-primary">신고 등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script type="module" src="js/firebase-config.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
