@@ -96,13 +96,16 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
 // ------------------------------------------------------------------
 // 인증
 // ------------------------------------------------------------------
-document.getElementById("loginBtn").addEventListener("click", async () => {
+async function doGoogleLogin() {
   try {
     await signInWithPopup(auth, googleProvider);
   } catch (e) {
     toast("로그인 실패: " + e.message);
   }
-});
+}
+
+document.getElementById("loginBtn").addEventListener("click", doGoogleLogin);
+document.getElementById("landingLoginBtn").addEventListener("click", doGoogleLogin);
 
 document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
 
@@ -114,8 +117,11 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById("userBox").classList.add("hidden");
     document.getElementById("tabNav").classList.add("hidden");
     document.getElementById("app").classList.add("hidden");
+    document.getElementById("landing").classList.remove("hidden");
     return;
   }
+
+  document.getElementById("landing").classList.add("hidden");
 
   // 사용자 문서 확인/생성
   const userRef = doc(db, "users", user.uid);
