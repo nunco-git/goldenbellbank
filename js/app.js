@@ -3,6 +3,9 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   collection,
@@ -109,11 +112,82 @@ document.getElementById("landingLoginBtn").addEventListener("click", doGoogleLog
 
 document.getElementById("logoutBtn").addEventListener("click", () => signOut(auth));
 
+// ------------------------------------------------------------------
+// 이메일 인증 로그인 (네이버메일 등 임의의 이메일 주소, 구글 계정 불필요)
+// ------------------------------------------------------------------
+const EMAIL_FOR_SIGNIN_KEY = "goldenbell_emailForSignIn";
+
+function openEmailLoginModal() {
+  document.getElementById("emailLoginInput").value = "";
+  document.getElementById("emailLoginStatus").classList.add("hidden");
+  document.getElementById("emailLoginModal").classList.remove("hidden");
+}
+document.getElementById("emailLoginBtn").addEventListener("click", openEmailLoginModal);
+document.getElementById("landingEmailLoginBtn").addEventListener("click", openEmailLoginModal);
+document.getElementById("emailLoginCancelBtn").addEventListener("click", () => {
+  document.getElementById("emailLoginModal").classList.add("hidden");
+});
+
+// 네이버메일(@naver.com)만 허용
+function isAllowedEmailDomain(email) {
+  return /^[^\s@]+@naver\.com$/i.test(email);
+}
+
+document.getElementById("emailLoginSendBtn").addEventListener("click", async () => {
+  const email = document.getElementById("emailLoginInput").value.trim();
+  const status = document.getElementById("emailLoginStatus");
+  status.classList.remove("hidden");
+  if (!email || !email.includes("@")) {
+    status.textContent = "올바른 이메일 주소를 입력해 주세요.";
+    return;
+  }
+  if (!isAllowedEmailDomain(email)) {
+    status.textContent = "네이버메일(@naver.com) 주소만 로그인할 수 있습니다.";
+    return;
+  }
+  status.textContent = "인증 메일을 보내는 중입니다...";
+  try {
+    const actionCodeSettings = {
+      url: window.location.origin + window.location.pathname,
+      handleCodeInApp: true,
+    };
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    window.localStorage.setItem(EMAIL_FOR_SIGNIN_KEY, email);
+    status.textContent = `${email} 주소로 인증 메일을 보냈습니다. 메일함(스팸함 포함)에서 링크를 눌러주세요.`;
+  } catch (err) {
+    status.textContent = "메일 발송 실패: " + err.message;
+  }
+});
+
+// 이메일 인증 링크를 타고 돌아온 경우 자동 로그인 처리
+(async function completeEmailLinkSignInIfNeeded() {
+  if (!isSignInWithEmailLink(auth, window.location.href)) return;
+  let email = window.localStorage.getItem(EMAIL_FOR_SIGNIN_KEY);
+  if (!email) {
+    email = window.prompt("로그인에 사용할 네이버메일(@naver.com) 주소를 다시 입력해 주세요.");
+  }
+  if (!email) return;
+  if (!isAllowedEmailDomain(email)) {
+    toast("네이버메일(@naver.com) 주소만 로그인할 수 있습니다.");
+    return;
+  }
+  try {
+    await signInWithEmailLink(auth, email, window.location.href);
+    window.localStorage.removeItem(EMAIL_FOR_SIGNIN_KEY);
+    // 인증 파라미터가 남은 URL 정리
+    window.history.replaceState({}, document.title, window.location.pathname);
+    toast("이메일 인증으로 로그인되었습니다.");
+  } catch (err) {
+    toast("이메일 로그인 실패: " + err.message);
+  }
+})();
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if (!user) {
     isAdmin = false;
     document.getElementById("loginBtn").classList.remove("hidden");
+    document.getElementById("emailLoginBtn").classList.remove("hidden");
     document.getElementById("userBox").classList.add("hidden");
     document.getElementById("tabNav").classList.add("hidden");
     document.getElementById("app").classList.add("hidden");
@@ -140,7 +214,9 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   document.getElementById("loginBtn").classList.add("hidden");
+  document.getElementById("emailLoginBtn").classList.add("hidden");
   document.getElementById("userBox").classList.remove("hidden");
+  document.getElementById("userPhoto").classList.toggle("hidden", !user.photoURL);
   document.getElementById("userPhoto").src = user.photoURL || "";
   document.getElementById("userName").textContent = user.displayName || user.email;
   document.getElementById("adminBadge").classList.toggle("hidden", !isAdmin);
