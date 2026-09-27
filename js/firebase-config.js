@@ -12,12 +12,13 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.0/firebas
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+   apiKey: "AIzaSyCrOZELRNzI_2XJCq8UIUUSYPseOxVvbs0",
+  authDomain: "goldenbellbank.firebaseapp.com",
+  projectId: "goldenbellbank",
+  storageBucket: "goldenbellbank.firebasestorage.app",
+  messagingSenderId: "362800291607",
+  appId: "1:362800291607:web:1599383651dcb8e169a152",
+  measurementId: "G-N5GPC4GYYZ"
 };
 
 export const app = initializeApp(firebaseConfig);
