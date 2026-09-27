@@ -357,6 +357,79 @@ function renderAnswerWrap() {
     input.required = true;
     wrap.appendChild(input);
   }
+
+  // 정답 입력이 바뀔 때마다 같은 도서·같은 정답의 기존 문제를 확인
+  if (type === "mcq") {
+    document.getElementById("answerMcqSelect").addEventListener("change", checkDuplicateQuestions);
+  } else if (type === "ox") {
+    document.querySelectorAll('input[name="answerOx"]').forEach((r) => r.addEventListener("change", checkDuplicateQuestions));
+  } else {
+    document.getElementById("answerShortInput").addEventListener("input", debouncedCheckDuplicates);
+  }
+  checkDuplicateQuestions();
+}
+
+// ------------------------------------------------------------------
+// 유사(중복) 문제 미리보기
+// ------------------------------------------------------------------
+function getCurrentAnswerValue(type) {
+  if (type === "mcq") {
+    const sel = document.getElementById("answerMcqSelect");
+    if (!sel || sel.value === "") return "";
+    const choices = [...document.querySelectorAll("#mcqChoices .mcq-choice-row input[type=text]")].map((i) => i.value.trim());
+    return choices[parseInt(sel.value, 10)] || "";
+  }
+  if (type === "ox") {
+    const checked = document.querySelector('input[name="answerOx"]:checked');
+    return checked ? checked.value : "";
+  }
+  const input = document.getElementById("answerShortInput");
+  return input ? input.value.trim() : "";
+}
+
+let dupCheckTimer = null;
+function debouncedCheckDuplicates() {
+  clearTimeout(dupCheckTimer);
+  dupCheckTimer = setTimeout(checkDuplicateQuestions, 350);
+}
+
+async function checkDuplicateQuestions() {
+  const box = document.getElementById("dupWarning");
+  if (!box) return;
+  const bookId = document.getElementById("qBookSelect").value;
+  const type = document.getElementById("qType").value;
+  const answer = getCurrentAnswerValue(type);
+
+  if (!bookId || !answer) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+
+  try {
+    const snap = await getDocs(
+      query(collection(db, "questions"), where("bookId", "==", bookId), where("answer", "==", answer))
+    );
+    if (snap.empty) {
+      box.classList.add("hidden");
+      box.innerHTML = "";
+      return;
+    }
+    const items = [];
+    snap.forEach((d) => {
+      const data = d.data();
+      items.push(
+        `<li>${escapeHtml(data.questionText)}${data.authorName ? " · " + escapeHtml(data.authorName) : ""}</li>`
+      );
+    });
+    box.innerHTML = `
+      <div class="dup-title">⚠️ 정답이 같은 기존 문제 ${items.length}건이 있어요. 중복이 아닌지 확인해 주세요.</div>
+      <ul>${items.join("")}</ul>
+    `;
+    box.classList.remove("hidden");
+  } catch {
+    // 미리보기 조회 실패는 등록 자체를 막지 않음
+  }
 }
 
 function addChoiceRow(value = "") {
@@ -407,6 +480,8 @@ document.getElementById("qType").addEventListener("change", () => {
   document.getElementById("mcqChoicesWrap").classList.toggle("hidden", type !== "mcq");
   renderAnswerWrap();
 });
+
+document.getElementById("qBookSelect").addEventListener("change", checkDuplicateQuestions);
 
 resetChoices();
 renderAnswerWrap();
