@@ -2,7 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#2d5be3" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="독서골든벨" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" href="icons/icon-192.png" />
 <title>독서골든벨 문제은행</title>
 <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -22,18 +30,84 @@
 </header>
 
 <nav id="tabNav" class="tabnav hidden">
-  <button class="tab-btn active" data-tab="books">도서 관리</button>
-  <button class="tab-btn" data-tab="write">문제 등록</button>
-  <button class="tab-btn" data-tab="browse">문제 둘러보기</button>
-  <button class="tab-btn" data-tab="corrections">정정 내역</button>
-  <button class="tab-btn" data-tab="goldenbell">독서골든벨</button>
-  <button class="tab-btn" data-tab="ranking">랭킹</button>
+  <button class="tab-btn active" data-tab="home">🏠 홈</button>
+  <button class="tab-btn" data-tab="books">📚 도서 관리</button>
+  <button class="tab-btn" data-tab="write">✏️ 문제 등록</button>
+  <button class="tab-btn" data-tab="browse">🔍 문제 둘러보기</button>
+  <button class="tab-btn" data-tab="corrections">🛠 정정 내역</button>
+  <button class="tab-btn" data-tab="goldenbell">🔔 독서골든벨</button>
+  <button class="tab-btn" data-tab="ranking">🏆 랭킹</button>
 </nav>
 
 <main id="app" class="hidden">
 
+  <!-- 홈 -->
+  <section id="tab-home" class="tab-panel active">
+    <div class="hero">
+      <div class="hero-emoji">📚🔔</div>
+      <h2 class="hero-title">독서골든벨 문제은행에 오신 걸 환영합니다</h2>
+      <p class="hero-desc">
+        내가 읽은 책으로 문제를 만들고, 다 함께 검증하고, 골든벨로 즐기는 독서 활동 플랫폼입니다.<br />
+        도서를 등록하고 문제를 내면 <b>승인 절차 없이 바로</b> 문제은행에 쌓이고, 다른 이용자와 함께
+        오류를 바로잡으며 문제의 완성도를 높여갑니다. 문제를 많이 낼수록 등급도 올라갑니다.
+      </p>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card stat-blue">
+        <div class="stat-icon">📖</div>
+        <div class="stat-value" id="statBookCount">-</div>
+        <div class="stat-label">등록된 도서</div>
+      </div>
+      <div class="stat-card stat-green">
+        <div class="stat-icon">📝</div>
+        <div class="stat-value" id="statQuestionCount">-</div>
+        <div class="stat-label">등록된 문제</div>
+      </div>
+      <div class="stat-card stat-orange">
+        <div class="stat-icon">🔔</div>
+        <div class="stat-value" id="statGoldenbellCount">-</div>
+        <div class="stat-label">골든벨 활용 수</div>
+      </div>
+      <div class="stat-card stat-purple">
+        <div class="stat-icon">🙋</div>
+        <div class="stat-value" id="statUserCount">-</div>
+        <div class="stat-label">참여 이용자</div>
+      </div>
+    </div>
+
+    <h2>이렇게 사용하세요</h2>
+    <div class="howto-grid">
+      <div class="howto-card">
+        <div class="howto-num">1</div>
+        <div class="howto-title">📚 도서 등록</div>
+        <div class="howto-text">읽은 책의 제목·저자·출판사를 등록합니다.</div>
+      </div>
+      <div class="howto-card">
+        <div class="howto-num">2</div>
+        <div class="howto-title">✏️ 문제 등록</div>
+        <div class="howto-text">책 내용으로 문제와 정답을 만들어 바로 등록합니다. 페이지 사진으로 텍스트도 자동 추출됩니다.</div>
+      </div>
+      <div class="howto-card">
+        <div class="howto-num">3</div>
+        <div class="howto-title">🔍 함께 검증</div>
+        <div class="howto-text">다른 이용자가 오류를 신고하면, 2명 이상 동의 시 자동으로 수정됩니다.</div>
+      </div>
+      <div class="howto-card">
+        <div class="howto-num">4</div>
+        <div class="howto-title">🔔 골든벨 진행</div>
+        <div class="howto-text">도서를 골라 문제 수만큼 무작위로 뽑아 골든벨을 진행합니다.</div>
+      </div>
+      <div class="howto-card">
+        <div class="howto-num">5</div>
+        <div class="howto-title">🏆 등급 올리기</div>
+        <div class="howto-text">문제를 많이 등록할수록 브론즈 → 실버 → 골드 등급으로 올라갑니다.</div>
+      </div>
+    </div>
+  </section>
+
   <!-- 도서 관리 -->
-  <section id="tab-books" class="tab-panel active">
+  <section id="tab-books" class="tab-panel">
     <h2>도서 등록</h2>
     <form id="bookForm" class="card form-grid">
       <input type="text" id="bookTitle" placeholder="책 제목 *" required />

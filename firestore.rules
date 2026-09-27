@@ -48,5 +48,11 @@ service cloud.firestore {
       allow update: if isSignedIn();
       allow delete: if isAdmin();
     }
+
+    // 홈 화면 통계(골든벨 활용 수 등): 로그인 사용자는 조회/갱신 가능
+    match /meta/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
   }
 }
