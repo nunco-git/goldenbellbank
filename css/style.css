@@ -83,6 +83,26 @@ body {
 }
 .tab-btn:hover { background: #f7f8fc; }
 
+/* 로그인 전 랜딩 화면 */
+.landing {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+.landing-login-btn {
+  margin-top: 18px;
+  padding: 12px 28px;
+  font-size: 15px;
+}
+.landing-footnote {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin-top: 20px;
+}
+
 /* 홈 */
 .hero {
   background: linear-gradient(135deg, #eef2ff, #f5f0ff);
