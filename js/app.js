@@ -19,6 +19,7 @@ import {
   getDocs,
   getCountFromServer,
   serverTimestamp,
+  increment,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
   ref,
@@ -147,8 +148,41 @@ onAuthStateChanged(auth, async (user) => {
   initMyQuestions();
   initBrowse();
   initRanking();
+  initHome();
   if (isAdmin) initCorrectionsAdmin();
 });
+
+// ------------------------------------------------------------------
+// 홈 대시보드
+// ------------------------------------------------------------------
+function initHome() {
+  onSnapshot(collection(db, "books"), (snap) => {
+    const el = document.getElementById("statBookCount");
+    if (el) el.textContent = snap.size;
+  });
+  onSnapshot(collection(db, "questions"), (snap) => {
+    const el = document.getElementById("statQuestionCount");
+    if (el) el.textContent = snap.size;
+    const authors = new Set();
+    snap.forEach((d) => {
+      if (d.data().authorUid) authors.add(d.data().authorUid);
+    });
+    const userEl = document.getElementById("statUserCount");
+    if (userEl) userEl.textContent = authors.size;
+  });
+  onSnapshot(doc(db, "meta", "stats"), (snap) => {
+    const el = document.getElementById("statGoldenbellCount");
+    if (el) el.textContent = snap.exists() ? snap.data().goldenbellRuns || 0 : 0;
+  });
+}
+
+async function recordGoldenbellRun() {
+  try {
+    await setDoc(doc(db, "meta", "stats"), { goldenbellRuns: increment(1) }, { merge: true });
+  } catch {
+    // 통계 기록 실패는 무시 (골든벨 진행 자체에는 영향 없음)
+  }
+}
 
 // ------------------------------------------------------------------
 // 도서 관리
@@ -758,6 +792,7 @@ document.getElementById("gbStartBtn").addEventListener("click", async () => {
 
   document.getElementById("gbQuiz").classList.remove("hidden");
   renderGbQuestion();
+  recordGoldenbellRun();
 });
 
 function renderGbQuestion() {
